@@ -1,0 +1,44 @@
+# Resume Vision MCP - Cursor-Friendly Version
+# ===========================================
+# Simplified dependencies for reliable PDF generation
+
+# MCP Framework
+mcp>=1.0.0
+
+# Document Processing
+PyMuPDF>=1.23.0          # PDF handling and image conversion
+python-docx>=1.1.0       # DOCX document processing
+Pillow>=10.0.0           # Image processing and optimization
+
+# PDF Generation - WeasyPrint (simple & reliable)
+weasyprint>=60.0         # HTML to PDF conversion
+
+# HTML Processing
+beautifulsoup4>=4.12.0   # HTML parsing and analysis
+lxml>=4.9.0              # XML/HTML parser
+
+# File Handling
+pathlib>=1.0.1           # Enhanced path handling
+python-magic>=0.4.27     # File type detection
+
+# Utilities
+python-dateutil>=2.8.0   # Date/time utilities
+typing-extensions>=4.0.0 # Enhanced typing support
+
+# System Requirements for WeasyPrint on macOS:
+# brew install cairo pango gdk-pixbuf libffi gobject-introspection
+
+# Optional: LibreOffice for advanced document conversion
+# On macOS: brew install --cask libreoffice
+
+# Development and Testing (optional)
+pytest>=7.0.0            # Testing framework
+black>=23.0.0            # Code formatting
+flake8>=6.0.0            # Code linting
+
+# REMOVED for simplicity:
+# - playwright (complex, not needed)  
+# - pdfkit (requires wkhtmltopdf)
+# - anthropic (no external API calls)
+# - openai (no external API calls)
+# - No API keys required! ✨ 

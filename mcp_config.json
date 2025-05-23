@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "resume-vision": {
+      "command": "python",
+      "args": ["src/resume_vision_merged.py"],
+      "cwd": "/Users/nikmarf/JobKiller",
+      "env": {}
+    }
+  }
+} 
