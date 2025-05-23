@@ -50,7 +50,7 @@ brew install cairo pango gdk-pixbuf libffi gobject-introspection
 1. **Clone and Setup:**
 ```bash
 git clone <repository-url>
-cd JobKiller
+cd resume-vision-mcp
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
@@ -62,9 +62,9 @@ Add to your `~/.cursor/mcp.json`:
 {
   "mcpServers": {
     "resume-vision": {
-      "command": "/path/to/JobKiller/.venv/bin/python",
-      "args": ["/path/to/JobKiller/src/resume_vision_final.py"],
-      "cwd": "/path/to/JobKiller"
+      "command": "/path/to/resume-vision-mcp/.venv/bin/python",
+      "args": ["/path/to/resume-vision-mcp/src/resume_vision_final.py"],
+      "cwd": "/path/to/resume-vision-mcp"
     }
   }
 }
@@ -123,7 +123,7 @@ Restart Cursor and check MCP settings - the "resume-vision" server should appear
 ## 📁 Project Structure
 
 ```
-JobKiller/
+resume-vision-mcp/
 ├── src/                          # Core application code
 │   ├── resume_vision_final.py    # Main MCP server
 │   ├── document_converter.py     # Document → Screenshot conversion

@@ -6,7 +6,7 @@ Get Resume Vision MCP up and running in 5 minutes!
 
 ```bash
 git clone <repository-url>
-cd JobKiller
+cd resume-vision-mcp
 chmod +x setup.sh
 ./setup.sh
 ```
@@ -41,9 +41,9 @@ Add to `~/.cursor/mcp.json`:
 {
   "mcpServers": {
     "resume-vision": {
-      "command": "/path/to/JobKiller/.venv/bin/python",
-      "args": ["/path/to/JobKiller/src/resume_vision_final.py"],
-      "cwd": "/path/to/JobKiller"
+      "command": "/path/to/resume-vision-mcp/.venv/bin/python",
+      "args": ["/path/to/resume-vision-mcp/src/resume_vision_final.py"],
+      "cwd": "/path/to/resume-vision-mcp"
     }
   }
 }

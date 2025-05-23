@@ -72,6 +72,11 @@ agent_workspace/
 temp/
 test_output/
 
+# Personal documents (privacy protection)
+original_docs/Resume_Template.docx
+original_docs/*.docx
+original_docs/*.pdf
+
 # Generated files
 *.png
 *.pdf

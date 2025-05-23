@@ -32,7 +32,7 @@ pip install lxml>=4.9.0                  # XML/HTML parser
 **Option 1: Automated (Recommended)**
 ```bash
 git clone <repository-url>
-cd JobKiller
+cd resume-vision-mcp
 ./setup.sh
 ```
 
@@ -51,9 +51,9 @@ pip install -r requirements.txt
 {
   "mcpServers": {
     "resume-vision": {
-      "command": "/path/to/JobKiller/.venv/bin/python",
-      "args": ["/path/to/JobKiller/src/resume_vision_final.py"],
-      "cwd": "/path/to/JobKiller"
+      "command": "/path/to/resume-vision-mcp/.venv/bin/python",
+      "args": ["/path/to/resume-vision-mcp/src/resume_vision_final.py"],
+      "cwd": "/path/to/resume-vision-mcp"
     }
   }
 }
