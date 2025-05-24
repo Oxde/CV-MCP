@@ -271,6 +271,71 @@ def _get_timestamp() -> str:
 
 # Development/Debug tools
 @mcp.tool()
+def export_to_pdf(html_file_path: str, output_name: Optional[str] = None) -> Dict[str, Any]:
+    """Export HTML resume to PDF using automated generation."""
+    pdf_exporter = get_component("pdf_exporter")
+    if not pdf_exporter:
+        return {
+            "success": False,
+            "error": "PDFExporter component failed to initialize. Check server logs."
+        }
+    
+    try:
+        logger.info(f"📄 Exporting to PDF: {html_file_path}")
+        
+        result = pdf_exporter.convert_html_to_pdf(html_file_path, output_name, "professional")
+        
+        # Check if result is a file path (successful) or instructions (fallback)
+        if result.endswith('.pdf') and Path(result).exists():
+            current_session["last_pdf"] = result
+            return {
+                "success": True,
+                "pdf_path": result,
+                "message": f"✅ PDF exported successfully: {Path(result).name}",
+                "file_size_kb": round(Path(result).stat().st_size / 1024, 1)
+            }
+        else:
+            # Fallback method - return instructions
+            return {
+                "success": True,
+                "method": "browser_fallback",
+                "instructions": result,
+                "message": "📄 PDF ready via browser method - follow instructions to complete"
+            }
+        
+    except Exception as e:
+        logger.error(f"❌ PDF export failed: {e}")
+        return {"success": False, "error": str(e)}
+
+@mcp.tool()
+def save_as_template(html_file_path: str, template_name: str, description: Optional[str] = None) -> Dict[str, Any]:
+    """Save the current HTML resume as a reusable template."""
+    template_manager = get_component("template_manager")
+    if not template_manager:
+        return {
+            "success": False,
+            "error": "TemplateManager component failed to initialize. Check server logs."
+        }
+    
+    try:
+        logger.info(f"💾 Saving template: {template_name}")
+        
+        template_path = template_manager.save_as_template(html_file_path, template_name, description or "")
+        current_session["last_template"] = template_path
+        
+        return {
+            "success": True,
+            "template_path": template_path,
+            "template_name": template_name,
+            "message": f"✅ Template saved: {template_name}",
+            "description": description
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Template save failed: {e}")
+        return {"success": False, "error": str(e)}
+
+@mcp.tool()
 def clear_component_cache() -> Dict[str, Any]:
     """Clear the component cache to force reload of all components (for development)."""
     global _component_cache

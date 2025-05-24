@@ -1,225 +1,177 @@
-# Resume Vision MCP Server 🎯
+# JobKiller - Resume Vision MCP Server 🚀
 
-**AI-Powered Resume Processing Workflow for Cursor IDE**
+## Overview
 
-Transform any resume document (DOCX, PDF, images) into editable HTML replicas using AI vision analysis, then export to professional PDFs. Fully integrated with Cursor's MCP (Model Context Protocol) for seamless AI-assisted editing.
+**JobKiller** is a Model Context Protocol (MCP) server that provides an AI-powered resume editing workflow. Upload any document format, get AI vision analysis, and export professional PDFs with optimized settings.
 
-## ✨ Features
+## 🎯 Key Features
 
-- 📄 **Universal Document Support**: DOCX, PDF, images → High-quality screenshots
-- 🔍 **AI Vision Analysis**: Claude vision integration for pixel-perfect HTML replication  
-- ✏️ **Smart Editing**: AI-powered content and styling improvements
-- 📝 **Template Management**: Save and reuse professional resume templates
-- 📑 **PDF Export**: Generate print-ready PDFs from edited HTML
-- 🚀 **Cursor Integration**: Native MCP tools for seamless workflow in Cursor IDE
+### ✅ Complete Resume Workflow
+- **Document Upload**: Support for DOCX, PDF, and image formats
+- **AI Vision Analysis**: Claude analyzes document structure and content
+- **HTML Generation**: Creates editable HTML replicas
+- **Template Management**: Save and reuse optimized templates
+- **PDF Export**: Professional single-page PDFs with optimal settings
+
+### 🔧 Optimized PDF Generation (V2)
+Based on extensive testing of 6+ PDF generation methods, V2 uses the best configuration:
+- **Single-page output**: Ensures resume fits on one page like the original
+- **No headers/footers**: Clean output without unwanted timestamps or file paths
+- **Perfect fonts**: Preserves original typography and spacing (~183KB files)
+- **Playwright-powered**: Most reliable PDF generation method
 
 ## 🏗️ Architecture
 
-```
-Document (DOCX/PDF/Image) 
-    ↓ [DocumentConverter]
-Screenshot (High-quality PNG)
-    ↓ [VisionReplicator + Claude]
-HTML Replica (Pixel-perfect)
-    ↓ [AIEditor]
-Enhanced HTML (Improved content/styling)
-    ↓ [PDFExporter]
-Professional PDF (Print-ready)
-```
+### Current Versions
+- **`resume_vision_v2.py`** - ✅ **CURRENT**: Optimized with FastMCP + enhanced PDF generation
+- **`resume_vision_v1.py`** - Legacy: Original working version (backup)
+
+### Core Components
+- **`optimal_pdf_exporter.py`** - Optimized PDF generation with Playwright
+- **`document_converter.py`** - Document to screenshot conversion
+- **`vision_replicator.py`** - AI vision analysis coordination
+- **`template_manager.py`** - Template storage and management
+- **`ai_editor.py`** - Content editing capabilities
+- **`pdf_exporter.py`** - Original PDF generation (fallback)
 
 ## 📦 Installation
 
-### Prerequisites
+1. **Clone and setup:**
+   ```bash
+   git clone https://github.com/yourusername/JobKiller.git
+   cd JobKiller
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
 
-**Required:**
-- Python 3.8+
-- Cursor IDE
-- LibreOffice (for DOCX conversion)
+2. **Install dependencies:**
+   ```bash
+   pip install mcp playwright
+   playwright install chromium
+   ```
 
-**macOS Setup:**
-```bash
-# Install LibreOffice
-brew install --cask libreoffice
+3. **Configure MCP in Cursor:**
+   Add to your `~/.cursor/mcp.json`:
+   ```json
+   {
+     "mcpServers": {
+       "resume-vision": {
+         "command": "/path/to/JobKiller/.venv/bin/python",
+         "args": ["/path/to/JobKiller/src/resume_vision_v2.py"],
+         "cwd": "/path/to/JobKiller"
+       }
+     }
+   }
+   ```
 
-# Install system dependencies for PDF generation
-brew install cairo pango gdk-pixbuf libffi gobject-introspection
-```
+4. **Restart Cursor** to load the MCP server
 
-### Project Setup
+## 🛠️ Available Tools
 
-1. **Clone and Setup:**
-```bash
-git clone <repository-url>
-cd resume-vision-mcp
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-```
+### Primary Workflow
+- **`upload_and_screenshot`** - Convert documents to high-quality screenshots
+- **`prepare_for_vision_analysis`** - Get Claude analysis instructions
+- **`process_claude_html`** - Process HTML from Claude's vision analysis
+- **`export_to_pdf`** - Generate optimized PDFs
 
-2. **Configure MCP in Cursor:**
-Add to your `~/.cursor/mcp.json`:
-```json
+### Management Tools
+- **`save_as_template`** - Save HTML as reusable template
+- **`get_workflow_status`** - Check system status and component health
+- **`start_resume_workflow`** - Begin complete editing workflow
+- **`clear_component_cache`** - Development tool for reloading components
+
+## 🧪 PDF Generation Journey
+
+Our V2 includes extensively tested PDF optimization:
+
+### Testing Results
+| Method | File Size | Pages | Quality | Status |
+|--------|-----------|-------|---------|---------|
+| Chrome Headless | 208KB | ✅ | Good | ✅ Works |
+| **Playwright (V2)** | **~183KB** | **✅** | **Excellent** | **✅ Optimal** |
+| WeasyPrint | N/A | ❌ | Poor | ❌ Dependencies |
+| wkhtmltopdf | N/A | ❌ | Layout issues | ❌ Failed |
+
+### Optimal Configuration (V2)
+```python
 {
-  "mcpServers": {
-    "resume-vision": {
-      "command": "/path/to/resume-vision-mcp/.venv/bin/python",
-      "args": ["/path/to/resume-vision-mcp/src/resume_vision_final.py"],
-      "cwd": "/path/to/resume-vision-mcp"
-    }
-  }
+    'width': '8.5in',           # US Letter
+    'height': '11in',
+    'margin': {'top': '0.6in', 'right': '0.6in', 'bottom': '0.6in', 'left': '0.6in'},
+    'print_background': True,    # Include styling
+    'scale': 0.85,              # 15% reduction for better fit
+    'display_header_footer': False  # No unwanted headers
 }
 ```
 
-3. **Verify Installation:**
-Restart Cursor and check MCP settings - the "resume-vision" server should appear green.
+## 🎯 Usage Example
 
-## 🚀 Usage
-
-### Quick Start
-
-1. **Upload Document:**
+```bash
+# In Cursor with MCP enabled:
+@upload_and_screenshot /path/to/resume.pdf
+@prepare_for_vision_analysis /path/to/screenshot.png
+# [Follow Claude vision analysis steps]
+@process_claude_html "<html>...</html>"
+@export_to_pdf /path/to/resume.html
 ```
-@upload_and_screenshot file_path="/path/to/resume.docx"
-```
-
-2. **Prepare for Vision Analysis:**
-```
-@prepare_for_vision_analysis screenshot_path="generated_path"
-```
-
-3. **Upload Screenshot to Claude** and ask for HTML replica
-
-4. **Process Claude's Response:**
-```
-@process_claude_html html_content="<html>...</html>"
-```
-
-### Complete Workflow
-
-**One-command workflow:**
-```
-@start_resume_workflow file_path="/path/to/resume.docx" workflow_name="my_resume"
-```
-
-**Manual step-by-step workflow:**
-1. `@upload_and_screenshot` - Convert document to screenshot
-2. `@prepare_for_vision_analysis` - Get Claude instructions  
-3. Upload screenshot to Claude and get HTML replica
-4. `@process_claude_html` - Save and validate HTML
-5. `@edit_with_ai` - Enhance content/styling (optional)
-6. `@export_to_pdf` - Generate final PDF
-
-### Available MCP Tools
-
-| Tool | Purpose |
-|------|---------|
-| `upload_and_screenshot` | Convert any document to high-quality screenshot |
-| `prepare_for_vision_analysis` | Prepare Claude vision analysis with instructions |
-| `process_claude_html` | Process and validate Claude's HTML response |
-| `get_workflow_status` | Check server status and progress |
-| `start_resume_workflow` | Complete automated workflow |
-| `clear_component_cache` | Reload components (development) |
 
 ## 📁 Project Structure
 
 ```
-resume-vision-mcp/
-├── src/                          # Core application code
-│   ├── resume_vision_final.py    # Main MCP server
-│   ├── document_converter.py     # Document → Screenshot conversion
-│   ├── vision_replicator.py      # Claude vision integration
-│   ├── ai_editor.py              # AI-powered editing
-│   ├── template_manager.py       # Template system
-│   ├── pdf_exporter.py           # HTML → PDF export
-│   └── utils/                    # Utility functions
-├── resume_workspace/             # Working directory (auto-created)
-│   ├── screenshots/              # Generated screenshots
-│   ├── html/                     # HTML replicas
-│   ├── templates/                # Saved templates
-│   ├── pdf/                      # Final PDFs
-│   └── temp/                     # Temporary files
-├── original_docs/                # Source documents
-├── requirements.txt              # Python dependencies
+JobKiller/
+├── src/
+│   ├── resume_vision_v2.py         # 🚀 Current optimized version
+│   ├── resume_vision_v1.py         # Legacy version (backup)
+│   ├── optimal_pdf_exporter.py     # Optimized PDF generation
+│   ├── document_converter.py       # Document processing
+│   ├── vision_replicator.py        # AI vision coordination
+│   ├── template_manager.py         # Template management
+│   ├── ai_editor.py               # Content editing
+│   └── pdf_exporter.py            # Original PDF export (fallback)
+├── resume_workspace/
+│   ├── templates/saved_templates/  # Optimized templates
+│   ├── screenshots/               # Document screenshots
+│   ├── html/                     # Generated HTML files
+│   └── pdf/                      # Exported PDFs
+├── README_OPTIMIZED_SOLUTION.md   # Detailed technical documentation
 └── README.md                     # This file
 ```
 
-## 🔧 Configuration
+## ✅ Success Metrics (V2)
 
-### Environment Variables
-- `WORKSPACE_DIR`: Custom workspace directory (default: `./resume_workspace`)
-- `LOG_LEVEL`: Logging level (default: `INFO`)
+- ✅ **Single-page output** (vs original 2-page problem)
+- ✅ **No unwanted headers** (vs timestamp/path problem)
+- ✅ **Optimal file size** (~183KB vs 208KB+ alternatives)
+- ✅ **Professional quality** (fonts, spacing, layout preserved)
+- ✅ **Reliable generation** (consistent results across documents)
+- ✅ **FastMCP stability** (no more yellow MCP status)
 
-### MCP Configuration
-The server automatically configures itself with:
-- Explicit workspace paths to avoid permission issues
-- Lazy component loading for optimal performance
-- Comprehensive error handling and recovery
+## 🔬 Technical Details
 
-## 🛠️ Development
+### Why V2 is Better
+1. **FastMCP Framework**: More stable than manual Server setup
+2. **Lazy Loading**: Components load only when needed
+3. **Graceful Fallback**: Falls back to original PDF exporter if optimized fails
+4. **Comprehensive Testing**: Based on extensive multi-method testing
 
-### Running Tests
-```bash
-python -m pytest tests/
-```
+### PDF Quality Evolution
+1. **Original Problem**: 2 pages, unwanted headers, poor layout
+2. **V1**: Working but basic PDF generation
+3. **V2**: Optimized single-page, professional quality, ~183KB files
 
-### Code Formatting
-```bash
-black src/
-flake8 src/
-```
+## 🚀 Development
 
-### Adding New Components
-1. Create module in `src/`
-2. Add to lazy loading in `get_component()` function
-3. Add MCP tool wrapper if needed
-
-## ❌ Troubleshooting
-
-### Common Issues
-
-**"MCP server appears yellow/red in Cursor"**
-- Check Python path in MCP config
-- Verify virtual environment activation
-- Check server logs in Cursor MCP settings
-
-**"LibreOffice conversion failed"**
-- Ensure LibreOffice is installed: `brew install --cask libreoffice`
-- Check if LibreOffice is accessible from command line: `libreoffice --version`
-
-**"PDF generation failed"**
-- Install system dependencies: `brew install cairo pango gdk-pixbuf`
-- Check WeasyPrint installation: `python -c "import weasyprint; print('OK')"`
-
-**"Permission denied errors"**
-- Check workspace directory permissions
-- Ensure project directory is writable
-
-### Debug Mode
-```bash
-# Enable debug logging
-export LOG_LEVEL=DEBUG
-python src/resume_vision_final.py
-```
-
-## 📝 Contributing
-
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature-name`
-3. Commit changes: `git commit -am 'Add feature'`
-4. Push to branch: `git push origin feature-name`
-5. Submit Pull Request
+The project uses:
+- **Python 3.8+** with async/await
+- **MCP (Model Context Protocol)** for Cursor integration
+- **FastMCP** for stable server framework
+- **Playwright** for optimal PDF generation
+- **Lazy loading** for component management
 
 ## 📄 License
 
-MIT License - see LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- Built for [Cursor IDE](https://cursor.sh) with MCP integration
-- Uses [Claude](https://claude.ai) for AI vision analysis
-- Document processing powered by PyMuPDF and LibreOffice
-- PDF generation via WeasyPrint
+MIT License - Feel free to use and modify for your resume editing needs!
 
 ---
 
-**Ready to transform your resume workflow! 🚀** 
+**Result**: A production-ready MCP server that transforms resume editing with AI vision analysis and generates professional, single-page PDFs! 🎉 

@@ -8,6 +8,7 @@ Simple and portable - works with optional WeasyPrint or browser fallback.
 
 import os
 import tempfile
+import asyncio
 from pathlib import Path
 from typing import Dict, Optional, Any
 import logging
@@ -20,23 +21,39 @@ class PDFExporter:
     """
     🎯 Simple & Portable PDF Export
     
-    HTML → Professional PDF with optional WeasyPrint
-    Graceful fallback to browser-based PDF generation.
+    HTML → Professional PDF with multiple backend options:
+    - pyppeteer (headless Chrome) - automated
+    - WeasyPrint - optional high quality
+    - browser - manual fallback
     """
     
     def __init__(self, output_dir: str = "output/pdf"):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
-        # Try WeasyPrint - completely optional
+        # Try backends in order of preference
         self.backend = "browser"
+        self.pyppeteer = None
+        self.weasyprint = None
+        
+        # Try pyppeteer first (best automation)
         try:
-            import weasyprint
-            self.weasyprint = weasyprint
-            self.backend = "weasyprint"
-            logger.info("✅ WeasyPrint available - PDF generation enabled")
-        except (ImportError, OSError):
-            logger.info("📝 PDF export: Browser method available (WeasyPrint optional)")
+            import pyppeteer
+            self.pyppeteer = pyppeteer
+            self.backend = "pyppeteer"
+            logger.info("✅ Pyppeteer available - Automated PDF generation enabled")
+        except ImportError:
+            logger.info("📝 Pyppeteer not available")
+        
+        # Try WeasyPrint as secondary option
+        if not self.pyppeteer:
+            try:
+                import weasyprint
+                self.weasyprint = weasyprint
+                self.backend = "weasyprint"
+                logger.info("✅ WeasyPrint available - PDF generation enabled")
+            except (ImportError, OSError):
+                logger.info("📝 WeasyPrint not available")
         
         logger.info(f"🎯 PDFExporter initialized: {self.backend} → {self.output_dir}")
     
@@ -70,7 +87,9 @@ class PDFExporter:
         
         output_path = self.output_dir / f"{output_name}.pdf"
         
-        if self.backend == "weasyprint":
+        if self.backend == "pyppeteer":
+            return self._generate_with_pyppeteer(html_content, output_path, style, html_path)
+        elif self.backend == "weasyprint":
             return self._generate_with_weasyprint(html_content, output_path, style)
         else:
             return self._generate_with_browser(html_content, output_path, style, html_path)
@@ -128,6 +147,74 @@ class PDFExporter:
         
         logger.info(f"📄 Browser PDF method ready: {temp_html.name}")
         return instructions
+    
+    def _generate_with_pyppeteer(self, html_content: str, output_path: Path, style: str, html_path=None) -> str:
+        """Generate PDF using pyppeteer (headless Chrome)"""
+        try:
+            logger.info(f"📄 Converting HTML → PDF with pyppeteer: {output_path.name}")
+            
+            # Optimize HTML for PDF
+            optimized_html = self._optimize_for_pdf(html_content, style)
+            
+            # Create temporary HTML file for pyppeteer
+            temp_html = self.output_dir / f"{output_path.stem}_temp.html"
+            temp_html.write_text(optimized_html, encoding='utf-8')
+            
+            # Run async PDF generation with absolute path
+            absolute_temp_html = temp_html.resolve()
+            asyncio.run(self._async_generate_pdf(str(absolute_temp_html), str(output_path)))
+            
+            # Clean up temp file
+            temp_html.unlink()
+            
+            # Validate result
+            if not output_path.exists() or output_path.stat().st_size < 1000:
+                raise RuntimeError("PDF generation failed - file too small or missing")
+            
+            size_kb = round(output_path.stat().st_size / 1024, 1)
+            logger.info(f"✅ PDF ready: {output_path.name} ({size_kb} KB)")
+            
+            return str(output_path)
+            
+        except Exception as e:
+            logger.error(f"❌ Pyppeteer failed: {e}")
+            # Fallback to next available method
+            if self.weasyprint:
+                return self._generate_with_weasyprint(html_content, output_path, style)
+            else:
+                return self._generate_with_browser(html_content, output_path, style, html_path)
+    
+    async def _async_generate_pdf(self, html_file_path: str, pdf_path: str):
+        """Async function to generate PDF with pyppeteer"""
+        browser = None
+        try:
+            # Launch browser with proper options
+            browser = await self.pyppeteer.launch({
+                'headless': True,
+                'args': ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+            })
+            page = await browser.newPage()
+            
+            # Load the HTML file
+            file_url = f"file://{html_file_path}"
+            await page.goto(file_url, {'waitUntil': 'networkidle0'})
+            
+            # Generate PDF with proper settings
+            await page.pdf({
+                'path': pdf_path,
+                'format': 'A4',
+                'printBackground': True,
+                'margin': {
+                    'top': '0.75in',
+                    'right': '0.75in', 
+                    'bottom': '0.75in',
+                    'left': '0.75in'
+                }
+            })
+            
+        finally:
+            if browser:
+                await browser.close()
     
     def _optimize_for_pdf(self, html_content: str, style: str) -> str:
         """Add PDF-optimized CSS"""
