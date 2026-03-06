@@ -101,6 +101,6 @@ class ChatMessage(Base):
     content = Column(Text)
     context_type = Column(String(50), default="general")  # general, cv_edit, vacancy, onboarding
     cv_id = Column(Integer, nullable=True)  # If related to a specific CV
-    metadata = Column(JSON, default=dict)
+    extra_data = Column(JSON, default=dict)
 
     user = relationship("User", back_populates="chat_messages")

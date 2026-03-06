@@ -22,11 +22,6 @@ app.include_router(vacancies.router)
 app.include_router(cvs.router)
 app.include_router(chat.router)
 
-# Serve frontend static files in production
-frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"
-if frontend_dist.exists():
-    app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="frontend")
-
 
 @app.on_event("startup")
 def startup():
@@ -36,3 +31,9 @@ def startup():
 @app.get("/api/health")
 def health():
     return {"status": "ok", "version": "1.0.0"}
+
+
+# Serve frontend static files in production (must be LAST - catches all routes)
+frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"
+if frontend_dist.exists():
+    app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="frontend")
