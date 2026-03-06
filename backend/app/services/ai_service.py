@@ -1,15 +1,12 @@
 """AI service with smart context management for cheap model usage."""
 from typing import Optional
-from openai import AsyncOpenAI
+from anthropic import AsyncAnthropic
 from sqlalchemy.orm import Session
 
 from ..config import settings
 from ..models.models import User, ChatMessage, CV, Vacancy
 
-client = AsyncOpenAI(
-    api_key=settings.OPENAI_API_KEY,
-    base_url=settings.OPENAI_BASE_URL,
-)
+client = AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
 
 SYSTEM_PROMPT = """You are CV Craft AI, an expert career coach and resume writer.
 You help users create outstanding, ATS-friendly resumes tailored to specific job descriptions.
@@ -160,26 +157,22 @@ async def chat(
     )
     recent_messages.reverse()
 
-    # Build messages array
-    messages = [{"role": "system", "content": system}]
+    # Build messages array (Anthropic format: no system in messages)
+    messages = []
     for msg in recent_messages:
         messages.append({"role": msg.role, "content": msg.content})
     messages.append({"role": "user", "content": message})
 
-    # Choose model (cheap for simple, smart for CV generation)
-    model = settings.AI_MODEL
-    if context_type == "cv_edit" or "generate" in message.lower():
-        model = settings.AI_MODEL_SMART
-
     # Call AI
-    response = await client.chat.completions.create(
-        model=model,
+    response = await client.messages.create(
+        model=settings.AI_MODEL,
+        system=system,
         messages=messages,
         temperature=0.7,
         max_tokens=2000,
     )
 
-    assistant_message = response.choices[0].message.content
+    assistant_message = response.content[0].text
 
     # Save messages to DB
     db.add(ChatMessage(

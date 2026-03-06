@@ -8,7 +8,7 @@ echo "🚀 Starting CV Craft..."
 if [ ! -f backend/.env ]; then
     echo "⚠️  No .env file found. Creating from template..."
     cp backend/.env.example backend/.env
-    echo "📝 Edit backend/.env and add your OPENAI_API_KEY"
+    echo "📝 Edit backend/.env and add your ANTHROPIC_API_KEY"
     exit 1
 fi
 

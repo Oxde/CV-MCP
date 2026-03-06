@@ -1,15 +1,12 @@
 """Generate CV HTML from templates and user data."""
 import json
 from typing import Optional
-from openai import AsyncOpenAI
+from anthropic import AsyncAnthropic
 
 from ..config import settings
 from ..models.models import User, CV, Vacancy
 
-client = AsyncOpenAI(
-    api_key=settings.OPENAI_API_KEY,
-    base_url=settings.OPENAI_BASE_URL,
-)
+client = AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
 
 
 def build_cv_data(user: User, vacancy: Optional[Vacancy] = None) -> dict:
@@ -58,15 +55,15 @@ Rules:
 
 Return the COMPLETE updated cv_data as JSON only. No explanation."""
 
-    response = await client.chat.completions.create(
-        model=settings.AI_MODEL_SMART,
+    response = await client.messages.create(
+        model=settings.AI_MODEL,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
         max_tokens=3000,
     )
 
     import re
-    content = response.choices[0].message.content
+    content = response.content[0].text
     try:
         json_match = re.search(r"\{[\s\S]*\}", content)
         if json_match:

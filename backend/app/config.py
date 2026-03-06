@@ -6,10 +6,8 @@ class Settings(BaseSettings):
     APP_NAME: str = "CV Craft"
     DATABASE_URL: str = "sqlite:///./data/cvcraft.db"
     SECRET_KEY: str = "change-me-in-production-use-env-var"
-    OPENAI_API_KEY: str = ""
-    OPENAI_BASE_URL: str = "https://api.openai.com/v1"
-    AI_MODEL: str = "gpt-4o-mini"
-    AI_MODEL_SMART: str = "gpt-4o"
+    ANTHROPIC_API_KEY: str = ""
+    AI_MODEL: str = "claude-haiku-4-5-20251001"
     UPLOAD_DIR: str = "./data/uploads"
     CV_OUTPUT_DIR: str = "./data/cvs"
     MAX_CONTEXT_MESSAGES: int = 20

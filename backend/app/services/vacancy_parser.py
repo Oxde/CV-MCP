@@ -3,14 +3,11 @@ import re
 from typing import Optional
 import httpx
 from bs4 import BeautifulSoup
-from openai import AsyncOpenAI
+from anthropic import AsyncAnthropic
 
 from ..config import settings
 
-client = AsyncOpenAI(
-    api_key=settings.OPENAI_API_KEY,
-    base_url=settings.OPENAI_BASE_URL,
-)
+client = AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
 
 
 async def parse_vacancy_from_url(url: str) -> dict:
@@ -38,7 +35,7 @@ async def parse_vacancy_from_url(url: str) -> dict:
         # Trim to reasonable size
         text = text[:6000]
 
-        # Use AI to extract structured data (cheap model is fine)
+        # Use AI to extract structured data
         extracted = await _extract_with_ai(text, url)
         return extracted
 
@@ -72,14 +69,14 @@ Return this exact JSON structure (use empty string if not found):
   "tech_stack": ["technology 1", "technology 2", ...]
 }}"""
 
-    response = await client.chat.completions.create(
-        model=settings.AI_MODEL,  # Use cheap model
+    response = await client.messages.create(
+        model=settings.AI_MODEL,
         messages=[{"role": "user", "content": prompt}],
         temperature=0,
         max_tokens=1000,
     )
 
-    content = response.choices[0].message.content
+    content = response.content[0].text
     # Extract JSON from response
     import json
     try:

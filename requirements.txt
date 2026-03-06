@@ -40,5 +40,5 @@ flake8>=6.0.0            # Code linting
 # - playwright (complex, not needed)  
 # - pdfkit (requires wkhtmltopdf)
 # - anthropic (no external API calls)
-# - openai (no external API calls)
+# - openai (replaced with anthropic in backend)
 # - No API keys required! ✨ 
