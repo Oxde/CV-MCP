@@ -13,7 +13,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -79,9 +78,14 @@ original_docs/*.pdf
 
 # Generated files
 *.png
-*.pdf
-*.html
-!src/*.html  # Keep template HTML files in src
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Backend data
+data/
+backend/.env
 
 # Test files
 test_*
