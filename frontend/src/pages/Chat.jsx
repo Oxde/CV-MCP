@@ -44,12 +44,8 @@ export default function Chat() {
         cv_id: cvId ? parseInt(cvId) : undefined,
         vacancy_id: vacancyId ? parseInt(vacancyId) : undefined,
       });
-
       setMessages(prev => [...prev, { role: 'assistant', content: res.reply }]);
-
-      if (res.extracted_data) {
-        await refreshUser();
-      }
+      if (res.extracted_data) await refreshUser();
     } catch {
       setMessages(prev => [
         ...prev,
@@ -66,10 +62,10 @@ export default function Chat() {
   };
 
   return (
-    <div className="h-[calc(100vh-60px)] md:h-[calc(100vh-56px)] flex flex-col max-w-3xl mx-auto">
+    <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-white">
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
+      <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between bg-gray-950/50 shrink-0">
+        <div className="flex gap-1 bg-gray-800 rounded-lg p-0.5">
           {[
             { id: 'general', label: 'General' },
             { id: 'cv_edit', label: 'CV Editor' },
@@ -78,7 +74,7 @@ export default function Chat() {
               key={id}
               onClick={() => setContextType(id)}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                contextType === id ? 'bg-white shadow text-blue-600' : 'text-gray-500'
+                contextType === id ? 'bg-gray-700 text-white' : 'text-gray-500'
               }`}
             >
               {label}
@@ -87,7 +83,7 @@ export default function Chat() {
         </div>
         <button
           onClick={clearChat}
-          className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+          className="p-2 rounded-lg hover:bg-gray-800 text-gray-500 hover:text-gray-300"
           title="Clear chat"
         >
           <RotateCcw className="w-4 h-4" />
@@ -95,10 +91,10 @@ export default function Chat() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 bg-gray-50">
+      <div className="flex-1 overflow-y-auto px-4 py-4">
         {messages.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-500 text-sm">
               {contextType === 'cv_edit'
                 ? 'Ask me to edit your CV. Try: "Make my summary more impactful"'
                 : 'Ask me anything about your career or CV. Try: "How can I improve my skills section?"'}
@@ -110,7 +106,7 @@ export default function Chat() {
         ))}
         {sending && (
           <div className="flex justify-start mb-3">
-            <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+            <div className="bg-gray-800 border border-gray-700 rounded-2xl rounded-bl-md px-4 py-3">
               <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
             </div>
           </div>
@@ -119,21 +115,21 @@ export default function Chat() {
       </div>
 
       {/* Input */}
-      <div className="bg-white border-t border-gray-200 px-4 py-3">
-        <div className="flex gap-2">
+      <div className="border-t border-gray-800 px-4 py-3 bg-gray-950/50 shrink-0">
+        <div className="flex gap-2 max-w-3xl mx-auto">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
             placeholder={contextType === 'cv_edit' ? 'Tell me what to change...' : 'Ask me anything...'}
-            className="flex-1 bg-gray-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white border border-transparent focus:border-blue-500"
+            className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-gray-500"
             disabled={sending}
           />
           <button
             onClick={sendMessage}
             disabled={sending || !input.trim()}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white p-2.5 rounded-xl transition-colors"
+            className="bg-white hover:bg-gray-100 disabled:bg-gray-700 disabled:text-gray-500 text-gray-950 p-2.5 rounded-xl transition-colors"
           >
             <Send className="w-4 h-4" />
           </button>

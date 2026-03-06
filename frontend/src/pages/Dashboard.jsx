@@ -1,216 +1,197 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, FileText, Download, Trash2, Eye, Palette } from 'lucide-react';
+import { FileText, Download, Trash2, Palette, ChevronDown, Plus } from 'lucide-react';
 import { useApp } from '../lib/store';
 import { api } from '../lib/api';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user } = useApp();
-  const [cvs, setCvs] = useState([]);
+  const { user, cvs, selectedCvId, setSelectedCvId, refreshCvs } = useApp();
   const [templates, setTemplates] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [showCreate, setShowCreate] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState('modern');
-  const [cvName, setCvName] = useState('');
-  const [previewCv, setPreviewCv] = useState(null);
+  const [selectedCv, setSelectedCv] = useState(null);
+  const [loadingCv, setLoadingCv] = useState(false);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      Promise.all([
-        api.listCVs(user.id),
-        api.listTemplates(),
-      ]).then(([c, t]) => {
-        setCvs(c);
-        setTemplates(t);
-      }).finally(() => setLoading(false));
-    }
-  }, [user]);
+    api.listTemplates().then(setTemplates).catch(() => {});
+  }, []);
 
-  const createCV = async () => {
-    setCreating(true);
-    try {
-      const cv = await api.createCV({
-        user_id: user.id,
-        name: cvName || 'My CV',
-        template_id: selectedTemplate,
-      });
-      setCvs(prev => [cv, ...prev]);
-      setShowCreate(false);
-      setCvName('');
-    } catch (e) {
-      alert(e.message);
+  // Load selected CV detail
+  useEffect(() => {
+    if (selectedCvId) {
+      setLoadingCv(true);
+      api.getCV(selectedCvId)
+        .then(setSelectedCv)
+        .catch(() => {
+          setSelectedCv(null);
+          setSelectedCvId(null);
+        })
+        .finally(() => setLoadingCv(false));
+    } else {
+      setSelectedCv(null);
     }
-    setCreating(false);
-  };
+  }, [selectedCvId, setSelectedCvId]);
 
-  const downloadPDF = async (cv) => {
+  const downloadPDF = async () => {
+    if (!selectedCv) return;
     try {
-      const res = await api.exportPDF(cv.id);
+      const res = await api.exportPDF(selectedCv.id);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${cv.name}.pdf`;
+      a.download = `${selectedCv.name}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
-      alert('PDF generation failed: ' + e.message);
+      alert('PDF export failed: ' + e.message);
     }
   };
 
-  const deleteCV = async (id) => {
-    if (!confirm('Delete this CV?')) return;
-    await api.deleteCV(id);
-    setCvs(prev => prev.filter(c => c.id !== id));
+  const deleteCv = async () => {
+    if (!selectedCv || !confirm('Delete this CV?')) return;
+    await api.deleteCV(selectedCv.id);
+    setSelectedCvId(null);
+    setSelectedCv(null);
+    refreshCvs();
   };
 
-  if (loading) {
+  const changeTemplate = async (templateId) => {
+    if (!selectedCv) return;
+    try {
+      await api.changeTemplate(selectedCv.id, templateId);
+      const updated = await api.getCV(selectedCv.id);
+      setSelectedCv(updated);
+      setShowTemplatePicker(false);
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  const createCV = async () => {
+    try {
+      const cv = await api.createCV({
+        user_id: user.id,
+        name: 'Untitled CV',
+        template_id: 'modern',
+      });
+      await refreshCvs();
+      setSelectedCvId(cv.id);
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  // Empty state
+  if (!selectedCvId) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-400">Loading...</div>
+      <div className="h-full flex flex-col items-center justify-center px-4">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <FileText className="w-8 h-8 text-gray-600" />
+          </div>
+          <h2 className="text-xl font-semibold text-white mb-2">No CV selected</h2>
+          <p className="text-gray-500 text-sm mb-6">
+            {cvs.length === 0
+              ? 'Create your first CV to get started.'
+              : 'Select a CV from the sidebar to preview it.'}
+          </p>
+          {cvs.length === 0 && (
+            <button
+              onClick={createCV}
+              className="bg-white hover:bg-gray-100 text-gray-950 font-medium px-6 py-2.5 rounded-xl text-sm transition-colors inline-flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Create Your First CV
+            </button>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">My CVs</h1>
-          <p className="text-sm text-gray-500">{cvs.length} resume{cvs.length !== 1 ? 's' : ''}</p>
-        </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition-colors"
-        >
-          <Plus className="w-4 h-4" /> New CV
-        </button>
-      </div>
+    <div className="h-full flex flex-col">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800 bg-gray-950/50 shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <h1 className="text-sm font-semibold text-white truncate">
+            {selectedCv?.name || 'Loading...'}
+          </h1>
 
-      {/* Create CV modal */}
-      {showCreate && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-bold mb-4">Create New CV</h2>
-            <input
-              type="text"
-              placeholder="CV name (e.g., 'Google SWE')"
-              value={cvName}
-              onChange={(e) => setCvName(e.target.value)}
-              className="w-full bg-gray-100 rounded-xl px-4 py-2.5 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <p className="text-sm font-medium text-gray-700 mb-2">Choose a template:</p>
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              {templates.map(t => (
-                <button
-                  key={t.id}
-                  onClick={() => setSelectedTemplate(t.id)}
-                  className={`text-left p-3 rounded-xl border-2 transition-colors ${
-                    selectedTemplate === t.id
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="w-3 h-3 rounded-full" style={{ background: t.preview_color }} />
-                    <span className="text-sm font-semibold">{t.name}</span>
-                  </div>
-                  <p className="text-xs text-gray-500">{t.description}</p>
-                </button>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={createCV}
-                disabled={creating}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white py-2.5 rounded-xl text-sm font-medium transition-colors"
-              >
-                {creating ? 'Creating...' : 'Create CV'}
-              </button>
-              <button
-                onClick={() => setShowCreate(false)}
-                className="px-4 py-2.5 rounded-xl text-sm text-gray-600 hover:bg-gray-100"
-              >
-                Cancel
-              </button>
-            </div>
+          {/* Template picker */}
+          <div className="relative">
+            <button
+              onClick={() => setShowTemplatePicker(!showTemplatePicker)}
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-200 bg-gray-800 px-2.5 py-1.5 rounded-lg transition-colors"
+            >
+              {selectedCv?.template_id || 'template'}
+              <ChevronDown className="w-3 h-3" />
+            </button>
+            {showTemplatePicker && (
+              <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-700 rounded-xl p-1 z-10 min-w-[160px] shadow-lg">
+                {templates.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => changeTemplate(t.id)}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                      selectedCv?.template_id === t.id
+                        ? 'bg-gray-700 text-white'
+                        : 'text-gray-400 hover:bg-gray-700 hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: t.preview_color }} />
+                      {t.name}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-      )}
 
-      {/* CV Preview modal */}
-      {previewCv && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-4xl h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="font-bold">{previewCv.name}</h2>
-              <button onClick={() => setPreviewCv(null)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
-            </div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => navigate(`/chat?cv=${selectedCv?.id}`)}
+            className="p-2 rounded-lg text-gray-400 hover:text-blue-400 hover:bg-gray-800 transition-colors"
+            title="Edit with AI"
+          >
+            <Palette className="w-4 h-4" />
+          </button>
+          <button
+            onClick={downloadPDF}
+            className="p-2 rounded-lg text-gray-400 hover:text-green-400 hover:bg-gray-800 transition-colors"
+            title="Download PDF"
+          >
+            <Download className="w-4 h-4" />
+          </button>
+          <button
+            onClick={deleteCv}
+            className="p-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-gray-800 transition-colors"
+            title="Delete CV"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* CV Preview */}
+      <div className="flex-1 bg-gray-800/30 p-4 overflow-auto">
+        {loadingCv ? (
+          <div className="h-full flex items-center justify-center text-gray-500 text-sm">Loading preview...</div>
+        ) : selectedCv?.html_content ? (
+          <div className="max-w-[800px] mx-auto h-full">
             <iframe
-              srcDoc={previewCv.html_content}
-              className="flex-1 w-full"
+              srcDoc={selectedCv.html_content}
+              className="w-full h-full bg-white rounded-lg shadow-2xl shadow-black/30"
               title="CV Preview"
             />
           </div>
-        </div>
-      )}
-
-      {/* CV list */}
-      {cvs.length === 0 ? (
-        <div className="text-center py-16">
-          <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 mb-1">No CVs yet</p>
-          <p className="text-sm text-gray-400">Create your first CV to get started</p>
-        </div>
-      ) : (
-        <div className="grid gap-3">
-          {cvs.map(cv => (
-            <div key={cv.id} className="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between hover:shadow-sm transition-shadow">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 text-sm">{cv.name}</h3>
-                  <p className="text-xs text-gray-400">Template: {cv.template_id}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setPreviewCv(cv)}
-                  className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600"
-                  title="Preview"
-                >
-                  <Eye className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => navigate(`/chat?cv=${cv.id}`)}
-                  className="p-2 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600"
-                  title="Edit with AI"
-                >
-                  <Palette className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => downloadPDF(cv)}
-                  className="p-2 rounded-lg hover:bg-green-50 text-gray-400 hover:text-green-600"
-                  title="Download PDF"
-                >
-                  <Download className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => deleteCV(cv.id)}
-                  className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600"
-                  title="Delete"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+        ) : (
+          <div className="h-full flex items-center justify-center text-gray-500 text-sm">No preview available</div>
+        )}
+      </div>
     </div>
   );
 }

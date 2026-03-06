@@ -4,7 +4,6 @@ import Layout from './components/Layout';
 import Landing from './pages/Landing';
 import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
-import Vacancies from './pages/Vacancies';
 import Chat from './pages/Chat';
 import Templates from './pages/Templates';
 import Profile from './pages/Profile';
@@ -14,7 +13,7 @@ function AppRoutes() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-950">
         <div className="text-gray-400 text-sm">Loading...</div>
       </div>
     );
@@ -41,7 +40,6 @@ function AppRoutes() {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/vacancies" element={<Vacancies />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/templates" element={<Templates />} />
         <Route path="/profile" element={<Profile />} />

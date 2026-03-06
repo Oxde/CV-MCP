@@ -6,8 +6,8 @@ export default function ChatBubble({ role, content }) {
       <div
         className={`max-w-[85%] md:max-w-[70%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
           isUser
-            ? 'bg-blue-600 text-white rounded-br-md'
-            : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md shadow-sm'
+            ? 'bg-white text-gray-950 rounded-br-md'
+            : 'bg-gray-800 text-gray-200 border border-gray-700 rounded-bl-md'
         }`}
       >
         {content}
